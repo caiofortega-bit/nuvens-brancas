@@ -539,7 +539,15 @@
 
             skipBtn.addEventListener('click', () => {
                 startScreen.classList.add('hidden');
-                if (player && player.destroy) player.destroy();
+                if (introTimer) {
+                    clearTimeout(introTimer);
+                    introTimer = null;
+                }
+                if (player && typeof player.destroy === 'function') {
+                    try { player.destroy(); } catch (e) {}
+                }
+                player = null;
+                document.getElementById('youtube-player').innerHTML = '';
                 showQuestions();
             });
 
@@ -591,9 +599,11 @@
             const video = youtubeVideos[videoType];
             let startSeconds = (videoType === 'v1' && !questionsActive) ? 0 : video.startTime;
 
-            if (player && player.destroy) {
-                // player already exists
+            if (player && typeof player.destroy === 'function') {
+                try { player.destroy(); } catch (e) {}
             }
+            player = null;
+            document.getElementById('youtube-player').innerHTML = '';
 
             player = new YT.Player('youtube-player', {
                 height: '100%',
@@ -638,7 +648,9 @@
             if (questionsActive) return;
             questionsActive = true;
             if (introTimer) clearTimeout(introTimer);
-            if (player && player.stopVideo) player.stopVideo();
+            if (player && typeof player.stopVideo === 'function') {
+                try { player.stopVideo(); } catch (e) {}
+            }
 
             // Toca música ambiente
             playAmbient();
@@ -733,17 +745,34 @@
             answers = {1: null, 2: null, 3: null, 4: null, 5: null};
             currentQuestion = 1;
             questionsActive = false;
-            videoStarted = false;
+            experienceCompleted = false;
+
             stopAmbient();
-            if (introTimer) clearTimeout(introTimer);
+            if (introTimer) {
+                clearTimeout(introTimer);
+                introTimer = null;
+            }
+
             document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-            
+            questionBoxes.forEach(box => {
+                box.classList.remove('active');
+                box.style.display = 'none';
+            });
+
             endScreen.classList.add('hidden');
             startScreen.classList.remove('hidden');
             questionsSection.classList.remove('active');
+            transitionMessage.classList.remove('active');
+            errorMessage.classList.remove('active');
+            errorMessage.style.display = 'none';
+            loading.classList.remove('active');
+            answeredCounter.textContent = `1/${totalQuestions}`;
 
-            if (experienceCompleted) skipBtn.style.display = 'flex';
-            if (player && player.destroy) player.destroy();
+            if (player && typeof player.destroy === 'function') {
+                try { player.destroy(); } catch (e) {}
+            }
+            player = null;
+            document.getElementById('youtube-player').innerHTML = '';
         }
 
         function showError(msg) {
